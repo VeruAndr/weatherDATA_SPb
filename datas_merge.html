@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Метеорологический журнал</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1e5799 0%, #207cca 100%);
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
+        .description {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            background-color: #e9ecef;
+            border: none;
+            flex: 1;
+            text-align: center;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .tab:hover {
+            background-color: #d8dde2;
+        }
+
+        .tab.active {
+            background-color: #1e5799;
+            color: white;
+        }
+
+        .content {
+            display: none;
+            background-color: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: #1e5799;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(30, 87, 153, 0.2);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        button {
+            background-color: #1e5799;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #16457a;
+        }
+
+        .download-btn {
+            background-color: #28a745;
+            margin-top: 20px;
+        }
+
+        .download-btn:hover {
+            background-color: #218838;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .data-table {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .year-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .year-btn {
+            padding: 8px 15px;
+            background-color: #e9ecef;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .year-btn.active {
+            background-color: #1e5799;
+            color: white;
+        }
+
+        .month-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .month-btn {
+            padding: 8px 15px;
+            background-color: #e9ecef;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .month-btn.active {
+            background-color: #1e5799;
+            color: white;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+
+            .month-btn {
+                flex: 1 0 30%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Метеорологический журнал</h1>
+            <p class="description">Запись данных для расчета оправдываемости прогнозов</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="input">Ввод данных</button>
+            <button class="tab" data-tab="monthly">Помесячный просмотр</button>
+            <button class="tab" data-tab="yearly">Погодовой просмотр</button>
+        </div>
+
+        <div class="content active" id="input">
+            <h2>Ввод метеорологических данных</h2>
+            <form id="weatherForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="date">Дата</label>
+                        <input type="date" id="date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="temperature">Температура (°C)</label>
+                        <input type="number" id="temperature" step="0.1" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="precipitation">Осадки (мм)</label>
+                        <input type="number" id="precipitation" step="0.1" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="windSpeed">Скорость ветра (м/с)</label>
+                        <input type="number" id="windSpeed" step="0.1" min="0" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="weatherPhenomena">Погодные явления</label>
+                    <textarea id="weatherPhenomena" rows="3" placeholder="Опишите погодные явления..."></textarea>
+                </div>
+
+                <button type="submit">Сохранить данные</button>
+            </form>
+
+            <button class="download-btn" id="downloadData">Скачать архив данных</button>
+        </div>
+
+        <div class="content" id="monthly">
+            <h2>Помесячный просмотр данных</h2>
+
+            <div class="year-selector" id="monthlyYearSelector">
+                <!-- Годы будут добавлены динамически -->
+            </div>
+
+            <div class="month-selector" id="monthSelector">
+                <!-- Месяцы будут добавлены динамически -->
+            </div>
+
+            <div class="data-table" id="monthlyData">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>Температура (°C)</th>
+                            <th>Осадки (мм)</th>
+                            <th>Скорость ветра (м/с)</th>
+                            <th>Погодные явления</th>
+                        </tr>
+                    </thead>
+                    <tbody id="monthlyTableBody">
+                        <!-- Данные будут добавлены динамически -->
+                    </tbody>
+                </table>
+                <div class="no-data" id="monthlyNoData">Выберите месяц для просмотра данных</div>
+            </div>
+        </div>
+
+        <div class="content" id="yearly">
+            <h2>Погодовой просмотр данных</h2>
+
+            <div class="year-selector" id="yearlyYearSelector">
+                <!-- Годы будут добавлены динамически -->
+            </div>
+
+            <div class="data-table" id="yearlyData">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Месяц</th>
+                            <th>Средняя температура (°C)</th>
+                            <th>Сумма осадков (мм)</th>
+                            <th>Макс. скорость ветра (м/с)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="yearlyTableBody">
+                        <!-- Данные будут добавлены динамически -->
+                    </tbody>
+                </table>
+                <div class="no-data" id="yearlyNoData">Выберите год для просмотра данных</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Модель данных
+        let weatherData = JSON.parse(localStorage.getItem('weatherData')) || [];
+
+        // Элементы DOM
+        const tabs = document.querySelectorAll('.tab');
+        const contents = document.querySelectorAll('.content');
+        const weatherForm = document.getElementById('weatherForm');
+        const downloadBtn = document.getElementById('downloadData');
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            // Установка текущей даты по умолчанию
+            document.getElementById('date').valueAsDate = new Date();
+
+            // Инициализация вкладок
+            initTabs();
+
+            // Инициализация селекторов годов и месяцев
+            initYearSelectors();
+            initMonthSelector();
+
+            // Обновление данных в таблицах
+            updateMonthlyView();
+            updateYearlyView();
+        });
+
+        // Инициализация вкладок
+        function initTabs() {
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.getAttribute('data-tab');
+
+                    // Убираем активный класс у всех вкладок и контента
+                    tabs.forEach(t => t.classList.remove('active'));
+                    contents.forEach(c => c.classList.remove('active'));
+
+                    // Добавляем активный класс к выбранной вкладке и контенту
+                    tab.classList.add('active');
+                    document.getElementById(tabId).classList.add('active');
+
+                    // Обновляем данные при переключении на соответствующие вкладки
+                    if (tabId === 'monthly') {
+                        updateMonthlyView();
+                    } else if (tabId === 'yearly') {
+                        updateYearlyView();
+                    }
+                });
+            });
+        }
+
+        // Инициализация селекторов годов
+        function initYearSelectors() {
+            const monthlyYearSelector = document.getElementById('monthlyYearSelector');
+            const yearlyYearSelector = document.getElementById('yearlyYearSelector');
+
+            // Получаем уникальные годы из данных
+            const years = [...new Set(weatherData.map(item => new Date(item.date).getFullYear()))];
+
+            // Если нет данных, добавляем текущий год
+            if (years.length === 0) {
+                years.push(new Date().getFullYear());
+            }
+
+            // Сортируем годы по убыванию
+            years.sort((a, b) => b - a);
+
+            // Очищаем селекторы
+            monthlyYearSelector.innerHTML = '';
+            yearlyYearSelector.innerHTML = '';
+
+            // Добавляем кнопки для каждого года
+            years.forEach(year => {
+                const monthlyBtn = document.createElement('button');
+                monthlyBtn.className = 'year-btn';
+                monthlyBtn.textContent = year;
+                monthlyBtn.dataset.year = year;
+                monthlyBtn.addEventListener('click', () => {
+                    document.querySelectorAll('#monthlyYearSelector .year-btn').forEach(btn => btn.classList.remove('active'));
+                    monthlyBtn.classList.add('active');
+                    updateMonthlyView();
+                });
+
+                const yearlyBtn = document.createElement('button');
+                yearlyBtn.className = 'year-btn';
+                yearlyBtn.textContent = year;
+                yearlyBtn.dataset.year = year;
+                yearlyBtn.addEventListener('click', () => {
+                    document.querySelectorAll('#yearlyYearSelector .year-btn').forEach(btn => btn.classList.remove('active'));
+                    yearlyBtn.classList.add('active');
+                    updateYearlyView();
+                });
+
+                monthlyYearSelector.appendChild(monthlyBtn);
+                yearlyYearSelector.appendChild(yearlyBtn);
+            });
+
+            // Активируем первый год по умолчанию
+            if (years.length > 0) {
+                monthlyYearSelector.querySelector('.year-btn').classList.add('active');
+                yearlyYearSelector.querySelector('.year-btn').classList.add('active');
+            }
+        }
+
+        // Инициализация селектора месяцев
+        function initMonthSelector() {
+            const monthSelector = document.getElementById('monthSelector');
+            const months = [
+                'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+                'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
+            ];
+
+            // Очищаем селектор
+            monthSelector.innerHTML = '';
+
+            // Добавляем кнопки для каждого месяца
+            months.forEach((month, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'month-btn';
+                btn.textContent = month;
+                btn.dataset.month = index;
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('#monthSelector .month-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    updateMonthlyView();
+                });
+
+                monthSelector.appendChild(btn);
+            });
+
+            // Активируем текущий месяц по умолчанию
+            const currentMonth = new Date().getMonth();
+            monthSelector.querySelectorAll('.month-btn')[currentMonth].classList.add('active');
+        }
+
+        // Обработка отправки формы
+        weatherForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const date = document.getElementById('date').value;
+            const temperature = parseFloat(document.getElementById('temperature').value);
+            const precipitation = parseFloat(document.getElementById('precipitation').value);
+            const windSpeed = parseFloat(document.getElementById('windSpeed').value);
+            const weatherPhenomena = document.getElementById('weatherPhenomena').value;
+
+            // Проверяем, существует ли уже запись на эту дату
+            const existingIndex = weatherData.findIndex(item => item.date === date);
+
+            if (existingIndex !== -1) {
+                // Обновляем существующую запись
+                weatherData[existingIndex] = {
+                    date,
+                    temperature,
+                    precipitation,
+                    windSpeed,
+                    weatherPhenomena
+                };
+            } else {
+                // Добавляем новую запись
+                weatherData.push({
+                    date,
+                    temperature,
+                    precipitation,
+                    windSpeed,
+                    weatherPhenomena
+                });
+            }
+
+            // Сохраняем в localStorage
+            localStorage.setItem('weatherData', JSON.stringify(weatherData));
+
+            // Обновляем селекторы годов, если добавился новый год
+            initYearSelectors();
+
+            // Сбрасываем форму
+            weatherForm.reset();
+            document.getElementById('date').valueAsDate = new Date();
+
+            // Показываем уведомление
+            alert('Данные успешно сохранены!');
+        });
+
+        // Обновление помесячного просмотра
+        function updateMonthlyView() {
+            const activeYearBtn = document.querySelector('#monthlyYearSelector .year-btn.active');
+            const activeMonthBtn = document.querySelector('#monthSelector .month-btn.active');
+
+            if (!activeYearBtn || !activeMonthBtn) return;
+
+            const selectedYear = parseInt(activeYearBtn.dataset.year);
+            const selectedMonth = parseInt(activeMonthBtn.dataset.month);
+
+            // Фильтруем данные по выбранному году и месяцу
+            const filteredData = weatherData.filter(item => {
+                const date = new Date(item.date);
+                return date.getFullYear() === selectedYear && date.getMonth() === selectedMonth;
+            });
+
+            // Сортируем по дате
+            filteredData.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            const tableBody = document.getElementById('monthlyTableBody');
+            const noData = document.getElementById('monthlyNoData');
+
+            // Очищаем таблицу
+            tableBody.innerHTML = '';
+
+            if (filteredData.length === 0) {
+                noData.style.display = 'block';
+                return;
+            }
+
+            noData.style.display = 'none';
+
+            // Заполняем таблицу данными
+            filteredData.forEach(item => {
+                const row = document.createElement('tr');
+
+                // Форматируем дату
+                const date = new Date(item.date);
+                const formattedDate = `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
+
+                row.innerHTML = `
+                    <td>${formattedDate}</td>
+                    <td>${item.temperature}</td>
+                    <td>${item.precipitation}</td>
+                    <td>${item.windSpeed}</td>
+                    <td>${item.weatherPhenomena}</td>
+                `;
+
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Обновление погодового просмотра
+        function updateYearlyView() {
+            const activeYearBtn = document.querySelector('#yearlyYearSelector .year-btn.active');
+
+            if (!activeYearBtn) return;
+
+            const selectedYear = parseInt(activeYearBtn.dataset.year);
+
+            // Фильтруем данные по выбранному году
+            const filteredData = weatherData.filter(item => {
+                const date = new Date(item.date);
+                return date.getFullYear() === selectedYear;
+            });
+
+            const tableBody = document.getElementById('yearlyTableBody');
+            const noData = document.getElementById('yearlyNoData');
+
+            // Очищаем таблицу
+            tableBody.innerHTML = '';
+
+            if (filteredData.length === 0) {
+                noData.style.display = 'block';
+                return;
+            }
+
+            noData.style.display = 'none';
+
+            // Группируем данные по месяцам
+            const monthlyData = {};
+
+            filteredData.forEach(item => {
+                const date = new Date(item.date);
+                const month = date.getMonth();
+
+                if (!monthlyData[month]) {
+                    monthlyData[month] = {
+                        temperatures: [],
+                        precipitations: [],
+                        windSpeeds: []
+                    };
+                }
+
+                monthlyData[month].temperatures.push(item.temperature);
+                monthlyData[month].precipitations.push(item.precipitation);
+                monthlyData[month].windSpeeds.push(item.windSpeed);
+            });
+
+            // Заполняем таблицу агрегированными данными
+            const months = [
+                'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+                'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
+            ];
+
+            months.forEach((monthName, monthIndex) => {
+                if (monthlyData[monthIndex]) {
+                    const data = monthlyData[monthIndex];
+                    const avgTemp = (data.temperatures.reduce((a, b) => a + b, 0) / data.temperatures.length).toFixed(1);
+                    const totalPrecip = data.precipitations.reduce((a, b) => a + b, 0).toFixed(1);
+                    const maxWind = Math.max(...data.windSpeeds).toFixed(1);
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${monthName}</td>
+                        <td>${avgTemp}</td>
+                        <td>${totalPrecip}</td>
+                        <td>${maxWind}</td>
+                    `;
+
+                    tableBody.appendChild(row);
+                }
+            });
+        }
+
+        // Скачивание архива данных
+        downloadBtn.addEventListener('click', function() {
+            if (weatherData.length === 0) {
+                alert('Нет данных для скачивания');
+                return;
+            }
+
+            // Создаем CSV-файл
+            let csvContent = "Дата,Температура (°C),Осадки (мм),Скорость ветра (м/с),Погодные явления\n";
+
+            weatherData.forEach(item => {
+                // Форматируем дату
+                const date = new Date(item.date);
+                const formattedDate = `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
+
+                csvContent += `"${formattedDate}",${item.temperature},${item.precipitation},${item.windSpeed},"${item.weatherPhenomena}"\n`;
+            });
+
+            // Создаем Blob и ссылку для скачивания
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+
+            link.setAttribute('href', url);
+            link.setAttribute('download', `метеоданные_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    </script>
+</body>
+</html>
